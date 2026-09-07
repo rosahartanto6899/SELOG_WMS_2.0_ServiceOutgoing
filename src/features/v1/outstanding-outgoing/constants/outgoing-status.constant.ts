@@ -15,7 +15,10 @@ export const OUTGOING_STATUS = {
 export type OutgoingStatus = (typeof OUTGOING_STATUS)[keyof typeof OUTGOING_STATUS];
 
 export const outstandingOutgoingConstant = {
-  menuCode: 'OUTSTANDING-OUTGOING',
+  // ponytail: menu OUTSTANDING-OUTGOING belum terdaftar di wms-user-dev → 403 di
+  // semua endpoint; pakai menu Input Plan Outgoing yang sudah ada + UAM SUPERADMIN.
+  // Pindah ke menu sendiri setelah registrasi Menu+Uam di DB user.
+  menuCode: 'INPUT-PLAN-OUTGOING',
   defaultDescription: '-',
   systemUser: 'System',
   messages: {
