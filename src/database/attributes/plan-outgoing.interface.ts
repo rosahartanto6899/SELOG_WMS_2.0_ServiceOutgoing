@@ -73,3 +73,37 @@ export interface PlanOutgoingDetailAddInfoAttributes {
   deletedBy?: string | null;
   deletedDate?: Date | null;
 }
+
+export interface PlanOutgoingPackagingAttributes {
+  id?: string;
+  packagingNo?: string | null;
+  shipmentNo?: string | null;
+  customerDestination?: string | null;
+  materialCode?: string | null;
+  materialName?: string | null;
+  materialBrand?: string | null;
+  qty?: number | null;
+  uom?: string | null;
+  weight?: number;
+  length?: number | null;
+  width?: number | null;
+  height?: number | null;
+  isActive?: boolean | null;
+  createdDate?: Date | null;
+  createdBy?: string | null;
+  modifiedDate?: Date | null;
+  modifiedBy?: string | null;
+  deletedBy?: string | null;
+  deletedDate?: Date | null;
+}
+
+export interface PlanOutgoingHistoryAttributes {
+  id?: string;
+  planOutgoingHeaderId?: string | null;
+  status?: string | null;
+  date?: Date | null;
+  leadtime?: number | null;
+  pic?: string | null;
+  createdDate?: Date | null;
+  createdBy?: string | null;
+}

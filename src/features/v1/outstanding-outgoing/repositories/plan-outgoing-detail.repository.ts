@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { Transaction } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
 import {
   PlanOutgoingDetail,
   PlanOutgoingDetailAddInfo,
@@ -13,6 +13,49 @@ import { filterAddInfos } from '../constants';
 export class PlanOutgoingDetailRepository {
   public async getById(id: string, transaction?: Transaction) {
     return PlanOutgoingDetail.findByPk(id, { transaction });
+  }
+
+  /** A2 — semua detail satu header (stok balik per material) */
+  public async findByHeader(headerId: string, transaction?: Transaction) {
+    return PlanOutgoingDetail.findAll({
+      where: { planOutgoingHeaderId: headerId },
+      transaction,
+    });
+  }
+
+  /** A8 — bulk fetch by ids */
+  public async findByIds(ids: string[], transaction?: Transaction) {
+    return PlanOutgoingDetail.findAll({
+      where: { id: { [Op.in]: ids } },
+      transaction,
+    });
+  }
+
+  /** A9 sample — detail by satu packagingNo */
+  public async findByPackagingNo(packagingNo: string, transaction?: Transaction) {
+    return PlanOutgoingDetail.findAll({
+      where: { packagingNo },
+      transaction,
+    });
+  }
+
+  /** A9 — detail by beberapa packagingNo */
+  public async findByPackagingNos(
+    packagingNos: string[],
+    transaction?: Transaction,
+  ) {
+    return PlanOutgoingDetail.findAll({
+      where: { packagingNo: { [Op.in]: packagingNos } },
+      transaction,
+    });
+  }
+
+  /** A9 — semua detail beberapa header (cek shipment penuh) */
+  public async findByHeaders(headerIds: string[], transaction?: Transaction) {
+    return PlanOutgoingDetail.findAll({
+      where: { planOutgoingHeaderId: { [Op.in]: headerIds } },
+      transaction,
+    });
   }
 
   public async getByHeaderAndMaterial(

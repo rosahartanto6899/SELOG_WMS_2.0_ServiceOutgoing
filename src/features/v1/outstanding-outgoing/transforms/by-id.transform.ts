@@ -17,6 +17,8 @@ export class ByIdTransform {
       pickingDate: detail.pickingDate
         ? DateHelper.formatDefault(detail.pickingDate)
         : null,
+      packagingNo: detail.packagingNo ?? null,
+      shipmentNo: detail.packaging?.shipmentNo ?? null,
       description: detail.description ?? null,
       addInfos: (detail.addInfos ?? []).map((a: any) => ({
         name: a.name,

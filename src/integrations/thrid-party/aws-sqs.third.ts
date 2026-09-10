@@ -3,8 +3,10 @@ import { randomUUID } from 'node:crypto';
 
 /**
  * Payload parity CoreApp `StockAvailabilityFinalDto` (System.Text.Json — key
- * PascalCase) + `StockAvailabilityDto`. ActionType 'WHSIN2' = tambah qtySOH
- * dari proses binning incoming.
+ * PascalCase) + `StockAvailabilityDto`. ActionType outgoing: 'WHSCLIN' =
+ * kembalikan SOH (cancel DN, parity CoreApp ConfirmDataCancellation),
+ * 'WHSREVOUT' = revisi plan qty (CoreApp UpdatePlanQtyOutstandingOutgoing),
+ * 'WHSOUT' = stok keluar picking (kandidat — verifikasi consumer, ponytail).
  */
 export interface StockAvailabilityMessage {
   ID?: number | null;
@@ -67,16 +69,15 @@ class AwsSqsThird {
   }
 
   /**
-   * Parity CoreApp `SqsService.PublishToInventoryAsync`. ActionType default
-   * 'WHSIN2' (tambah qtySOH dari binning); 'WHSINX' = kembalikan SOH (delete
-   * actual incoming, parity CoreApp DeleteActualIncoming). LogId = UUID lokal.
+   * Parity CoreApp `SqsService.PublishToInventoryAsync`. ActionType outgoing
+   * lihat komentar interface. LogId = UUID lokal.
    * // ponytail: MessageDataLog CoreApp via HTTP ke StockAPI legacy tidak dipanggil
    * (log 2.0 dikelola consumer); tambahkan jika consumer butuh tabel log pengirim.
    */
   public async publishToInventory(
     stock: StockAvailabilityMessage,
     userBy: string,
-    actionType: 'WHSIN2' | 'WHSINX' | 'WHSCLIN' = 'WHSIN2',
+    actionType: 'WHSCLIN' | 'WHSREVOUT' | 'WHSOUT' = 'WHSOUT',
   ): Promise<void> {
     const payload: StockAvailabilityFinalMessage = {
       StockAvailabilityDtos: [stock],
