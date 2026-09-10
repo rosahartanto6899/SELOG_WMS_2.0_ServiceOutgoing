@@ -4,6 +4,8 @@ import {
   PlanOutgoingHeaderAddInfo,
   PlanOutgoingDetailAddInfo,
 } from './plan-outgoing-add-info.entity';
+import { PlanOutgoingPackaging } from './plan-outgoing-packaging.entity';
+import { PlanOutgoingHistory } from './plan-outgoing-history.entity';
 
 export function setupAssociations() {
   PlanOutgoingHeader.hasMany(PlanOutgoingDetail, {
@@ -24,5 +26,23 @@ export function setupAssociations() {
   PlanOutgoingDetail.hasMany(PlanOutgoingDetailAddInfo, {
     foreignKey: 'planOutgoingDetailId',
     as: 'addInfos',
+  });
+
+  // spec 004: ref string packagingNo (tanpa FK — parity SP legacy)
+  PlanOutgoingDetail.belongsTo(PlanOutgoingPackaging, {
+    foreignKey: 'packagingNo',
+    targetKey: 'packagingNo',
+    as: 'packaging',
+  });
+
+  PlanOutgoingPackaging.hasMany(PlanOutgoingDetail, {
+    foreignKey: 'packagingNo',
+    sourceKey: 'packagingNo',
+    as: 'details',
+  });
+
+  PlanOutgoingHeader.hasMany(PlanOutgoingHistory, {
+    foreignKey: 'planOutgoingHeaderId',
+    as: 'histories',
   });
 }
