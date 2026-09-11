@@ -63,6 +63,12 @@ export const ITEMS_PACKAGING_STATUS = [
   OUTGOING_STATUS.PACKAGING,
 ] as const;
 
+/** Q4: header Ready To Ship tetap muncul di list shipment selama N hari
+ *  sejak status diset (H.modifiedDate) — lalu di-exclude (deviasi dari
+ *  usp_GetAllDataShipment; H.modifiedDate dipakai sebagai anchor, bukan
+ *  row history, jadi edit lain saat RTS bisa memperpanjang window). */
+export const SHIPMENT_RTS_RETENTION_DAYS = 3;
+
 /** Q1 search LIKE gabung 6 kolom (parity SP) */
 export const LIST_SEARCH_COLUMNS = [
   'poNo',

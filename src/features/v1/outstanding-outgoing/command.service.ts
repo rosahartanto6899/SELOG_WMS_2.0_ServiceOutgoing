@@ -791,8 +791,9 @@ async updatePlanQty(detailId: string, body: PlanQtyDto, req: any) {
   }
 
   /** A9 POST /ready-to-ship (usp_UpdateReadyToShip): 1 ShipmentNo utk grup
-   *  packaging; header → 'Ready To Ship' HANYA bila SEMUA detail header sudah
-   *  ber-packaging-ber-shipment (+history utk yang berubah saja). */
+   *  packaging (destinasi boleh beda); header → 'Ready To Ship' HANYA bila
+   *  SEMUA detail header sudah ber-packaging-ber-shipment (+history utk yang
+   *  berubah saja). */
   async readyToShip(req: any) {
     const body = req.body as ReadyToShipDto;
     const userBy = userOf(req);
@@ -801,13 +802,6 @@ async updatePlanQty(detailId: string, body: PlanQtyDto, req: any) {
     );
     if (packagings.length !== body.packagingNos.length) {
       throw new NotFoundException('packaging not found');
-    }
-
-    const destinations = new Set(
-      packagings.map((p) => p.get('customerDestination') ?? ''),
-    );
-    if (destinations.size > 1) {
-      throw new BadRequestException('destinationMismatch');
     }
 
     const shipmentNo = (await this.generateUniqueCodes('SHP', 1))[0];

@@ -1,4 +1,5 @@
 import { injectable } from 'inversify';
+import moment from 'moment';
 import { Op, QueryTypes, Transaction, WhereOptions } from 'sequelize';
 import { sequelize } from '@/utils/database.util';
 import {
@@ -7,7 +8,7 @@ import {
   PlanOutgoingPackaging,
 } from '@/database/entities';
 import { nowWib } from '@/utils';
-import { ITEMS_PACKAGING_STATUS } from '../constants';
+import { ITEMS_PACKAGING_STATUS, SHIPMENT_RTS_RETENTION_DAYS } from '../constants';
 
 /** Q2/Q3/Q4 — tab DN Items & Packaging & Shipment (spec 004, parity SP
  *  usp_GetAllDataOutstandingPackaging / usp_GetAllDataPackaging /
@@ -191,8 +192,10 @@ export class PlanOutgoingPackagingRepository {
     return { rows, total: Number(totalRows[0]?.total ?? 0) };
   }
 
-  /** Q4 — shipment: packaging ber-shipmentNo milik header aktif non-
-   *  Ready-To-Ship (parity usp_GetAllDataShipment; GROUP BY ShipmentNo).
+  /** Q4 — shipment: packaging ber-shipmentNo milik header aktif; header
+   *  Ready To Ship tetap tampil max SHIPMENT_RTS_RETENTION_DAYS hari sejak
+   *  status diset (deviasi disengaki dari usp_GetAllDataShipment yang langsung
+   *  exclude — permintaan bisnis: data ready-to-ship jangan hilang dulu).
    *  Raw SQL — alasan sama dengan findPackagings (PK diselipkan Sequelize).
    *  Server-side: search LIKE, sort whitelist, paging. */
   public async findShipments(param: {
@@ -218,7 +221,8 @@ export class PlanOutgoingPackagingRepository {
         WHERE P.isActive = 1 AND P.shipmentNo IS NOT NULL
           AND H.customerCode = :customerCode
           AND H.warehouseCode = :warehouseCode
-          AND H.isActive = 1 AND H.status <> 'Ready To Ship'
+          AND H.isActive = 1
+          AND (H.status <> 'Ready To Ship' OR H.modifiedDate >= :rtsCutoff)
           AND H.poType <> 'Adjustment' AND H.customerDestination IS NOT NULL
           ${like ? (searchByCol ? `AND ${searchByCol} LIKE :like` : `AND (P.shipmentNo LIKE :like OR P.customerDestination LIKE :like)`) : ''}`;
     const from = `
@@ -228,6 +232,10 @@ export class PlanOutgoingPackagingRepository {
     const repl = {
       customerCode: param.customerCode,
       warehouseCode: param.warehouseCode,
+      rtsCutoff: moment()
+        .utcOffset(420)
+        .subtract(SHIPMENT_RTS_RETENTION_DAYS, 'days')
+        .format('YYYY-MM-DD HH:mm:ss'),
       ...(like ? { like } : {}),
     };
 
@@ -436,5 +444,40 @@ export class PlanOutgoingPackagingRepository {
     });
     const total = await PlanOutgoingPackaging.count({ where });
     return { rows, total };
+  }
+
+  /** Q7 — PO per shipment (parity legacy GetPONumberByShipment, utk print
+   *  surat pengiriman): distinct poNo + description dari header detail yang
+   *  ber-packaging ber-shipment. */
+  public async findPosByShipmentNo(
+    shipmentNo: string,
+  ): Promise<Array<{ poNo: string; description: string | null }>> {
+    const rows = (await PlanOutgoingDetail.findAll({
+      attributes: [],
+      where: { '$packaging.shipmentNo$': shipmentNo },
+      include: [
+        {
+          model: PlanOutgoingPackaging,
+          as: 'packaging',
+          attributes: ['shipmentNo'],
+        },
+        {
+          model: PlanOutgoingHeader,
+          as: 'header',
+          attributes: ['poNo', 'description'],
+        },
+      ],
+      raw: true,
+    })) as any[];
+
+    const seen = new Set<string>();
+    const out: Array<{ poNo: string; description: string | null }> = [];
+    for (const r of rows) {
+      const poNo = r['header.poNo'];
+      if (!poNo || seen.has(poNo)) continue;
+      seen.add(poNo);
+      out.push({ poNo, description: r['header.description'] ?? null });
+    }
+    return out;
   }
 }

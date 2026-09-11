@@ -477,6 +477,15 @@ export class QueryService {
     };
   }
 
+  /** Q7 GET /shipments/:shipmentNo/pos — distinct PO per shipment
+   *  (parity legacy GetPONumberByShipment, utk print surat pengiriman). */
+  async getPosByShipmentNo(req: any) {
+    const rows = await this.packagingRepository.findPosByShipmentNo(
+      String(req.params.shipmentNo),
+    );
+    return { data: rows, httpCode: HTTP_STATUS.OK };
+  }
+
   /** Q8 GET /:id/history — history status + leadtime (parity SP + formula
    *  sama dgn outstanding-incoming): leadtime dihitung ulang saat read —
    *  diff dua Date yang di-parse dgn TZ server yg sama selalu akurat (relatif),
