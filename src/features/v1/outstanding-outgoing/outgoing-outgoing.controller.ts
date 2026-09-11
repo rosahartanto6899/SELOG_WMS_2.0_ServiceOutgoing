@@ -256,7 +256,6 @@ export class OutstandingOutgoingController extends BaseHttpController {
    *           schema: { $ref: '#/components/schemas/OutstandingOutgoingReadyToShipDto' }
    *     responses:
    *       200: { description: "Created (shipmentNo)" }
-   *       400: { description: destinationMismatch }
    *       404: { description: Not found }
    */
   @ValidatePermissions(UPDATE)
@@ -296,9 +295,27 @@ export class OutstandingOutgoingController extends BaseHttpController {
    *       200: { description: Packaging rows }
    */
   @ValidatePermissions(READ)
-  @httpGet('/shipments/:shipmentNo/packagings', ParamValidation(ShipmentNoParamDto), QueryValidation(PackagingByShipmentQueryDto), withLogging(LoggingActions.VIEW('outgoing-outgoing')))
+  @httpGet('/shipments/:shipmentNo/packagings', ParamValidation(ShipmentNoParamDto), QueryValidation(PackagingByShipmentQueryDto), withLogging(LoggingActions.VIEW('outstanding-outgoing')))
   async getPackagingsByShipmentNo(@request() req: Request) {
     return await this.queryService.getPackagingsByShipmentNo(req);
+  }
+
+  /**
+   * @swagger
+   * /v1/outstanding-outgoing/shipments/{shipmentNo}/pos:
+   *   get:
+   *     summary: Q7 — Distinct PO per shipment (print surat pengiriman)
+   *     tags: [OutstandingOutgoing]
+   *     security: [{ bearerAuth: [] }, { api_key: [] }]
+   *     parameters:
+   *       - { in: path, name: shipmentNo, required: true, schema: { type: string } }
+   *     responses:
+   *       200: { description: "[{ poNo, description }]" }
+   */
+  @ValidatePermissions(READ)
+  @httpGet('/shipments/:shipmentNo/pos', ParamValidation(ShipmentNoParamDto), withLogging(LoggingActions.VIEW('outstanding-outgoing')))
+  async getPosByShipmentNo(@request() req: Request) {
+    return await this.queryService.getPosByShipmentNo(req);
   }
 
 

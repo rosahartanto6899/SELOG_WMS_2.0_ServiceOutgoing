@@ -325,9 +325,9 @@ describe('A9 readyToShip', () => {
         p2: { packagingNo: 'PKG-B', customerDestination: 'Y' },
       },
     });
-    await expect(
-      sut.readyToShip(reqOf({ packagingNos: ['PKG-A', 'PKG-B'] })),
-    ).rejects.toThrow('destinationMismatch');
+    // destination berbeda kini BOLEH — 1 shipmentNo utk semuanya
+    const r = await sut.readyToShip(reqOf({ packagingNos: ['PKG-A', 'PKG-B'] }));
+    expect(r.data.shipmentNo).toMatch(/^SHP/);
   });
 
   it('header → Ready To Ship hanya bila SEMUA detail ter-shipment (+history)', async () => {
