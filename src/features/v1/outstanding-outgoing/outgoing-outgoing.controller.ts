@@ -46,6 +46,7 @@ import {
   ShipmentNoParamDto,
   BulkStatusDto,
   SequentialConfigDto,
+  MaterialCodeParamDto,
 } from './dtos';
 
 const READ = { menuCode: cst.menuCode, action: 'READ' };
@@ -96,6 +97,29 @@ export class OutstandingOutgoingController extends BaseHttpController {
   @httpGet('/', QueryValidation(ListDto), withLogging(LoggingActions.VIEW('outgoing-outgoing')))
   async getAll(@request() req: Request) {
     return await this.queryService.getAll(req);
+  }
+
+  /**
+   * @swagger
+   * /v1/outstanding-outgoing/plan-qty/{materialCode}:
+   *   get:
+   *     summary: Q-planQty — Sisa qty satu material per DN (parity usp_GetPlanOutgoingQtyByMaterialCode)
+   *     description: Tenant (customer/warehouse) diambil dari session aktif, bukan query param
+   *     tags: [OutstandingOutgoing]
+   *     security: [{ bearerAuth: [] }, { api_key: [] }]
+   *     parameters:
+   *       - { in: path, name: materialCode, required: true, schema: { type: string } }
+   *     responses:
+   *       200: { description: Sisa qty per DN }
+   */
+  @ValidatePermissions(READ)
+  @httpGet(
+    '/plan-qty/:materialCode',
+    ParamValidation(MaterialCodeParamDto),
+    withLogging(LoggingActions.VIEW('outgoing-outgoing')),
+  )
+  async getPlanQtyByMaterial(@request() req: Request) {
+    return await this.queryService.getPlanQtyByMaterial(req);
   }
 
   /**
