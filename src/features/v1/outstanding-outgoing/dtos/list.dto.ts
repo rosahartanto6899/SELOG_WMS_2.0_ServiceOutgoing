@@ -399,3 +399,9 @@ export class PackagingByShipmentQueryDto extends PopupQueryDto {
   })
   order?: string;
 }
+
+/** Param `:materialCode` plan-qty (bukan UUID — kode material bebas) */
+export class MaterialCodeParamDto {
+  @IsString({ message: 'MaterialCode must be a string' })
+  materialCode!: string;
+}

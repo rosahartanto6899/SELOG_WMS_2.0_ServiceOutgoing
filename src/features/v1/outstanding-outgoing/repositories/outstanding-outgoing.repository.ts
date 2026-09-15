@@ -10,7 +10,7 @@ import {
 } from '@/database/entities';
 import { PlanOutgoingHeaderAttributes } from '@/database/attributes';
 import { nowWib } from '@/utils';
-import { TOTALS_STATUS, filterAddInfos, leadtimeMinutes } from '../constants';
+import { TOTALS_STATUS, PLAN_QTY_EXCLUDE_STATUS, filterAddInfos, leadtimeMinutes } from '../constants';
 
 /** Row header untuk list outstanding (Q1) — parity usp_GetAllDataOutstandingOutgoing */
 export interface ListRow {
@@ -292,6 +292,52 @@ export class OutstandingOutgoingRepository {
     transaction?: Transaction,
   ) {
     await PlanOutgoingHeader.update(data, { where: { id }, transaction });
+  }
+
+  /** Q-planQty GET /plan-qty/:materialCode — sisa qty per DN
+   *  (parity usp_GetPlanOutgoingQtyByMaterialCode: status NOT IN whitelist +
+   *  detail PickingDate IS NULL; qty = POQty−PickingQty dgn guard CASE) */
+  public async planQtyByMaterial(
+    customerCode: string | undefined,
+    warehouseCode: string | undefined,
+    materialCode: string,
+  ) {
+    return PlanOutgoingDetail.findAll({
+      attributes: [
+        'materialCode',
+        [
+          literal(
+            `CASE WHEN ISNULL(POQty,0) <= ISNULL(PickingQty,0) THEN 0 ELSE ISNULL(POQty,0) - ISNULL(PickingQty,0) END`,
+          ),
+          'qty',
+        ],
+        'createdDate',
+      ],
+      include: [
+        {
+          model: PlanOutgoingHeader,
+          as: 'header',
+          attributes: [
+            'customerCode',
+            'customerName',
+            'warehouseCode',
+            'warehouseName',
+            'deliveryNoteNo',
+          ],
+          where: {
+            ...(customerCode ? { customerCode } : {}),
+            ...(warehouseCode ? { warehouseCode } : {}),
+            isActive: true,
+            status: { [Op.notIn]: [...PLAN_QTY_EXCLUDE_STATUS] },
+          },
+          required: true,
+        },
+      ],
+      where: { materialCode, pickingDate: null },
+      order: [['createdDate', 'DESC']],
+      subQuery: false,
+      raw: true,
+    });
   }
 
   /** Add-info header replace: hard-delete lama + insert baru (parity SP) */

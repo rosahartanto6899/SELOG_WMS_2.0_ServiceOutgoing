@@ -63,6 +63,14 @@ export const ITEMS_PACKAGING_STATUS = [
   OUTGOING_STATUS.PACKAGING,
 ] as const;
 
+/** Filter status plan-qty per material (usp_GetPlanOutgoingQtyByMaterialCode):
+ *  NOT IN whitelist — status baru otomatis masuk hitungan */
+export const PLAN_QTY_EXCLUDE_STATUS = [
+  OUTGOING_STATUS.DRAFT,
+  OUTGOING_STATUS.READY_TO_SHIP,
+  OUTGOING_STATUS.TRANSIT_OUT,
+] as const;
+
 /** Q4: header Ready To Ship tetap muncul di list shipment selama N hari
  *  sejak status diset (H.modifiedDate) — lalu di-exclude (deviasi dari
  *  usp_GetAllDataShipment; H.modifiedDate dipakai sebagai anchor, bukan

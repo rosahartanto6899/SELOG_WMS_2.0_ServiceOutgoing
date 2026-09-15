@@ -116,6 +116,31 @@ export class QueryService {
     };
   }
 
+  /** Q-planQty GET /plan-qty/:materialCode — sisa qty satu material per DN
+   *  (parity usp_GetPlanOutgoingQtyByMaterialCode; tenant dari session aktif —
+   *  FE tidak melempar customer/warehouse, sesi FE bisa kosong utk SUPERADMIN) */
+  async getPlanQtyByMaterial(req: any) {
+    const { materialCode } = req.params;
+    const rows = await this.repository.planQtyByMaterial(
+      req.user?.tokenCustomerCode ?? undefined,
+      req.user?.tokenWarehouseCode ?? undefined,
+      materialCode,
+    );
+    return {
+      data: rows.map((row: any) => ({
+        customerCode: row['header.customerCode'] ?? row.customerCode,
+        customerName: row['header.customerName'] ?? row.customerName,
+        warehouseCode: row['header.warehouseCode'] ?? row.warehouseCode,
+        warehouseName: row['header.warehouseName'] ?? row.warehouseName,
+        materialCode: row.materialCode,
+        deliveryNoteNo: row['header.deliveryNoteNo'] ?? row.deliveryNoteNo,
+        qty: Number(row.qty ?? 0),
+        createdAt: row.createdDate,
+      })),
+      httpCode: HTTP_STATUS.OK,
+    };
+  }
+
   /** Q2 GET /items — DN items sudah dipicking & belum ber-packaging
    *  (tab DN Items, server-side parity Q1) */
   async getItems(req: any) {
