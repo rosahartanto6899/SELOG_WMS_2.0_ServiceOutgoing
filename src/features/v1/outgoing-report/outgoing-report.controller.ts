@@ -28,7 +28,7 @@ const READ = { menuCode: cst.menuCode, action: 'READ' };
 export class OutgoingReportController extends BaseHttpController {
   private static readonly orLogging = ControllerLogging.forEntity(
     'outgoing-report',
-    MICROSERVICE_IDENTIFIERS.SERVICE_ORDER,
+    MICROSERVICE_IDENTIFIERS.SERVICE_OUTGOING,
   );
 
   constructor(

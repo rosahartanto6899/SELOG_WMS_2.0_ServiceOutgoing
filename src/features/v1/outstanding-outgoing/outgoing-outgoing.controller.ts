@@ -7,6 +7,7 @@ import {
   httpPost,
   httpPut,
   request,
+  requestParam,
 } from 'inversify-express-utils';
 import {
   BodyValidation,
@@ -470,9 +471,9 @@ export class OutstandingOutgoingController extends BaseHttpController {
    */
   @ValidatePermissions(UPDATE)
   @httpPut('/:id/status', ParamValidation(HeaderParamDto), BodyValidation(UpdateStatusDto), withLogging(LoggingActions.UPDATE('outgoing-outgoing')))
-  async updateStatus(@request() req: Request) {
+  async updateStatus(@request() req: Request, @requestParam('id') id: string) {
     return await this.commandService.updateStatus(
-      req.params.id,
+      id,
       req.body as UpdateStatusDto,
       req,
     );
@@ -493,8 +494,8 @@ export class OutstandingOutgoingController extends BaseHttpController {
    */
   @ValidatePermissions(READ)
   @httpGet('/:id/details', ParamValidation(HeaderParamDto), withLogging(LoggingActions.VIEW('outgoing-outgoing')))
-  async getDetails(@request() req: Request) {
-    return await this.queryService.getDetails(req.params.id);
+  async getDetails(@requestParam('id') id: string) {
+    return await this.queryService.getDetails(id);
   }
 
   /**
@@ -512,8 +513,8 @@ export class OutstandingOutgoingController extends BaseHttpController {
    */
   @ValidatePermissions(READ)
   @httpGet('/:id/history', ParamValidation(HeaderParamDto), withLogging(LoggingActions.VIEW('outgoing-outgoing')))
-  async getHistory(@request() req: Request) {
-    return await this.queryService.getHistory(req.params.id);
+  async getHistory(@requestParam('id') id: string) {
+    return await this.queryService.getHistory(id);
   }
 
   /**
@@ -536,9 +537,9 @@ export class OutstandingOutgoingController extends BaseHttpController {
    */
   @ValidatePermissions(UPDATE)
   @httpPut('/details/:detailId/plan-qty', ParamValidation(DetailIdParamDto), BodyValidation(PlanQtyDto), withLogging(LoggingActions.UPDATE('outgoing-outgoing')))
-  async updatePlanQty(@request() req: Request) {
+  async updatePlanQty(@request() req: Request, @requestParam('detailId') detailId: string) {
     return await this.commandService.updatePlanQty(
-      req.params.detailId,
+      detailId,
       req.body as PlanQtyDto,
       req,
     );
@@ -586,8 +587,8 @@ export class OutstandingOutgoingController extends BaseHttpController {
    */
   @ValidatePermissions(READ)
   @httpGet('/:id/picking-slip', ParamValidation(HeaderParamDto), withLogging(LoggingActions.VIEW('outgoing-outgoing')))
-  async getPickingSlip(@request() req: Request) {
-    return await this.queryService.getPickingSlip(req.params.id);
+  async getPickingSlip(@requestParam('id') id: string) {
+    return await this.queryService.getPickingSlip(id);
   }
 
   // ================= Input manual (spec 003) =================
@@ -704,7 +705,7 @@ export class OutstandingOutgoingController extends BaseHttpController {
    */
   @ValidatePermissions(READ)
   @httpGet('/:id/edit', ParamValidation(HeaderParamDto), withLogging(LoggingActions.VIEW('outgoing-outgoing')))
-  async getEdit(@request() req: Request) {
-    return await this.queryService.getEdit(req.params.id);
+  async getEdit(@requestParam('id') id: string) {
+    return await this.queryService.getEdit(id);
   }
 }
