@@ -35,17 +35,18 @@ export class QueryService {
     const limit = param.limit ?? 10;
     const { limit: size, offset } = Pagination.getPagination(page, limit);
 
+    // scope customer/warehouse dari token aktif — BUKAN query FE
+    // (fallback param hanya utk token tanpa klaim, mis. SUPERADMIN)
+    const customerCode = req.user?.tokenCustomerCode ?? param.customerCode;
+    const warehouseCode = req.user?.tokenWarehouseCode ?? param.warehouseCode;
+
     const baseWhere: WhereOptions = {
       isActive: true,
       status: { [Op.notIn]: [...OUTSTANDING_EXCLUDE_STATUS] },
       [Op.not]: ADJUSTMENT_QC_EXCLUDE, // NOT (Adjustment AND QC) — verified SP
     };
-    if (param.customerCode) {
-      baseWhere.customerCode = { [Op.like]: `%${param.customerCode}%` };
-    }
-    if (param.warehouseCode) {
-      baseWhere.warehouseCode = { [Op.like]: `%${param.warehouseCode}%` };
-    }
+    if (customerCode) baseWhere.customerCode = customerCode;
+    if (warehouseCode) baseWhere.warehouseCode = warehouseCode;
 
     // advanced searchBy materialCode → exact di detail (parity SP @MaterialCode)
     const detailWhere: WhereOptions | null =
@@ -151,8 +152,9 @@ export class QueryService {
     const HEADER_COLS = new Set(['deliveryNoteNo', 'poNo', 'customerDestination']);
 
     const { rows, total } = await this.packagingRepository.findItems({
-      customerCode: param.customerCode,
-      warehouseCode: param.warehouseCode,
+      // scope dari token aktif; fallback param utk token tanpa klaim (SUPERADMIN)
+      customerCode: req.user?.tokenCustomerCode ?? param.customerCode,
+      warehouseCode: req.user?.tokenWarehouseCode ?? param.warehouseCode,
       search: param.search,
       searchBy: param.searchBy,
       order: HEADER_COLS.has(param.order ?? '')
@@ -199,8 +201,8 @@ export class QueryService {
     const { limit: size, offset } = Pagination.getPagination(page, limit);
 
     const { rows, total } = await this.packagingRepository.findPackagings({
-      customerCode: param.customerCode,
-      warehouseCode: param.warehouseCode,
+      customerCode: req.user?.tokenCustomerCode ?? param.customerCode,
+      warehouseCode: req.user?.tokenWarehouseCode ?? param.warehouseCode,
       search: param.search,
       searchBy: param.searchBy,
       order: param.order ?? 'createdAt',
@@ -248,8 +250,8 @@ export class QueryService {
     const { limit: size, offset } = Pagination.getPagination(page, limit);
 
     const { rows, total } = await this.packagingRepository.findShipments({
-      customerCode: param.customerCode,
-      warehouseCode: param.warehouseCode,
+      customerCode: req.user?.tokenCustomerCode ?? param.customerCode,
+      warehouseCode: req.user?.tokenWarehouseCode ?? param.warehouseCode,
       search: param.search,
       searchBy: param.searchBy,
       order: param.order ?? 'modifiedDate',
@@ -276,7 +278,10 @@ export class QueryService {
 
   /** Q10 POST /totals — grand total outstanding */
   async getTotals(req: any) {
-    const { warehouseCodes } = req.body;
+    // warehouse scope dari token aktif; fallback body utk token tanpa klaim (SUPERADMIN)
+    const warehouseCodes = req.user?.tokenWarehouseCode
+      ? [req.user.tokenWarehouseCode]
+      : (req.body?.warehouseCodes ?? undefined);
     const totalDataOutstanding = await this.repository.countTotals(
       warehouseCodes,
     );
@@ -285,7 +290,9 @@ export class QueryService {
 
   /** Q11 POST /totals/by-warehouse — rincian per warehouse */
   async getTotalsByWarehouse(req: any) {
-    const { warehouseCodes } = req.body;
+    const warehouseCodes = req.user?.tokenWarehouseCode
+      ? [req.user.tokenWarehouseCode]
+      : (req.body?.warehouseCodes ?? undefined);
     const rows = await this.repository.countTotalsByWarehouse(warehouseCodes);
     return {
       data: rows.map((row: any) => ({

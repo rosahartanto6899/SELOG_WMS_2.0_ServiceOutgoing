@@ -19,16 +19,11 @@ import { OUTGOING_STATUS } from '../constants';
  *       required: [ids]
  *       properties:
  *         ids: { type: array, items: { type: string, format: uuid } }
- *         userLogin: { type: string, description: "Opsional — default dari token" }
  */
 export class IdsActionDto {
   @IsArray({ message: 'Ids must be an array' })
   @IsUUID('4', { each: true, message: 'Each id must be a valid UUID' })
   ids!: string[];
-
-  @IsOptional()
-  @IsString({ message: 'UserLogin must be a string' })
-  userLogin?: string;
 }
 
 /** A4 status whitelist — Transit khusus MUTATION+TRANS dicek command (parity JS legacy) */
