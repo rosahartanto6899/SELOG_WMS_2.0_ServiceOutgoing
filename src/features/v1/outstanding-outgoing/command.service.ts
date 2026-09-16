@@ -60,6 +60,14 @@ export class CommandService {
     const userBy = userOf(req);
     const now = nowWib();
 
+    // atribusi customer/warehouse dari token aktif — BUKAN payload FE
+    const customerCode = req.user?.tokenCustomerCode as string | undefined;
+    const customerName = req.user?.tokenCustomerName as string | undefined;
+    const warehouseCode = req.user?.tokenWarehouseCode as string | undefined;
+    const warehouseName = req.user?.tokenWarehouseName as string | undefined;
+    if (!customerCode || !warehouseCode)
+      throw new BadRequestException('no active customer/warehouse session');
+
     // guard duplikat materialCode dalam payload (atomic — dicek sebelum insert)
     const codes = body.details.map((d) => d.materialCode);
     if (new Set(codes).size !== codes.length) {
@@ -85,10 +93,10 @@ export class CommandService {
 
       const header = await this.repository.createHeader(
         {
-          customerCode: body.customerCode,
-          customerName: body.customerName,
-          warehouseCode: body.warehouseCode,
-          warehouseName: body.warehouseName,
+          customerCode,
+          customerName: customerName ?? '-',
+          warehouseCode,
+          warehouseName: warehouseName ?? '-',
           deliveryNoteNo: body.deliveryNoteNo,
           outgoingDate: toDate(body.outgoingDate),
           poNo: body.poNo,
@@ -222,10 +230,7 @@ export class CommandService {
       }
 
       const updates: any = { modifiedBy: userBy, modifiedDate: nowWib() };
-      if (body.customerCode != null) updates.customerCode = body.customerCode;
-      if (body.customerName != null) updates.customerName = body.customerName;
-      if (body.warehouseCode != null) updates.warehouseCode = body.warehouseCode;
-      if (body.warehouseName != null) updates.warehouseName = body.warehouseName;
+      // customer/warehouse immutable — atribusi dari token saat create
       if (body.poNo != null) updates.poNo = body.poNo;
       if (body.poType != null) updates.poType = body.poType;
       if (body.poDate != null) updates.poDate = toDate(body.poDate);
@@ -302,7 +307,7 @@ export class CommandService {
  *  (+history); tanpa Draft → 'Update skipped'. */
 async confirmDraft(req: any) {
   const { ids } = req.body as IdsActionDto;
-  const userBy = (req.body as any).userLogin ?? userOf(req);
+  const userBy = userOf(req);
   const headers = await this.repository.findByIds(ids);
   const drafts = headers.filter(
     (h) => h.get('status') === OUTGOING_STATUS.DRAFT,
@@ -345,7 +350,7 @@ async confirmDraft(req: any) {
  *  SOH per material yang sudah dipicking (SUM PickingQty). */
 async confirmCancellation(req: any) {
   const { ids } = req.body as IdsActionDto;
-  const userBy = (req.body as any).userLogin ?? userOf(req);
+  const userBy = userOf(req);
   const headers = await this.repository.findByIds(ids);
   const active = headers.filter((h) => h.get('isActive'));
 
@@ -428,7 +433,7 @@ async confirmCancellation(req: any) {
  *  non-Draft di-skip diam (tanpa history — parity SP). */
 async deleteOutstanding(req: any) {
   const { ids } = req.body as IdsActionDto;
-  const userBy = (req.body as any).userLogin ?? userOf(req);
+  const userBy = userOf(req);
   const now = nowWib();
   await sequelize.transaction(async (t) => {
     for (const id of ids) {
@@ -881,7 +886,7 @@ async updatePlanQty(detailId: string, body: PlanQtyDto, req: any) {
    *  (+history utk yang di-update). */
   async bulkUpdateStatus(req: any) {
     const body = req.body as BulkStatusDto;
-    const userBy = (req.body as any).userLogin ?? userOf(req);
+    const userBy = userOf(req);
     const headers = await this.repository.findByIds(body.ids);
 
     let updated = 0;

@@ -99,12 +99,8 @@ export class DetailRowDto {
  *   schemas:
  *     OutstandingOutgoingCreateDto:
  *       type: object
- *       required: [customerCode, customerName, warehouseCode, warehouseName, poNo, deliveryNoteNo, details]
+ *       required: [poNo, deliveryNoteNo, details]
  *       properties:
- *         customerCode: { type: string }
- *         customerName: { type: string }
- *         warehouseCode: { type: string }
- *         warehouseName: { type: string }
  *         poNo: { type: string }
  *         poType: { type: string }
  *         poDate: { type: string, example: "2026-01-01" }
@@ -118,18 +114,6 @@ export class DetailRowDto {
  *         details: { type: array, items: { $ref: '#/components/schemas/OutstandingOutgoingDetailRowDto' } }
  */
 export class CreateOutgoingDto {
-  @IsString({ message: 'CustomerCode must be a string' })
-  customerCode!: string;
-
-  @IsString({ message: 'CustomerName must be a string' })
-  customerName!: string;
-
-  @IsString({ message: 'WarehouseCode must be a string' })
-  warehouseCode!: string;
-
-  @IsString({ message: 'WarehouseName must be a string' })
-  warehouseName!: string;
-
   @IsString({ message: 'PoNo must be a string' })
   poNo!: string;
 
@@ -193,21 +177,6 @@ export class AddDetailDto {
  *       description: Edit header (C3) — field sama seperti create, add-info replace
  */
 export class UpdateOutgoingHeaderDto {
-  @IsOptional()
-  @IsString({ message: 'CustomerCode must be a string' })
-  customerCode?: string;
-
-  @IsOptional()
-  @IsString({ message: 'CustomerName must be a string' })
-  customerName?: string;
-
-  @IsOptional()
-  @IsString({ message: 'WarehouseCode must be a string' })
-  warehouseCode?: string;
-
-  @IsOptional()
-  @IsString({ message: 'WarehouseName must be a string' })
-  warehouseName?: string;
 
   @IsOptional()
   @IsString({ message: 'PoNo must be a string' })
